@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-slim
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -28,30 +28,18 @@ jobs:
       - run: npm ci
       - name: Typecheck, protocol tests, history tests and build
         run: npm run check
-      - name: Docker UI tests against simulated GATT
-        run: npm run test:docker
-      - name: Verify mock is reachable from the host
-        run: |
-          docker compose up -d --wait mock
-          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:4173/healthz
-      - name: Container logs
-        if: failure()
-        run: docker compose -f compose.yaml -f compose.test.yaml logs --no-color
-      - name: Collect browser traces on failure
-        if: failure()
-        run: |
-          mkdir -p artifacts
-          docker compose -f compose.yaml -f compose.test.yaml cp ui-tests:/app/test-results artifacts/test-results || true
-          docker compose -f compose.yaml -f compose.test.yaml cp ui-tests:/app/playwright-report artifacts/playwright-report || true
+      - name: Install Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: UI tests against simulated GATT
+        run: npm run test:ui
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: failure()
         with:
           name: browser-failure-artifacts
-          path: artifacts
+          path: |
+            test-results
+            playwright-report
           retention-days: 7
-      - name: Stop test containers
-        if: always()
-        run: npm run test:docker:down
       - name: Upload static site
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
@@ -61,7 +49,7 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: test
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-slim
     timeout-minutes: 10
     permissions:
       pages: write

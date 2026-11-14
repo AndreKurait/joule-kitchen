@@ -1,6 +1,7 @@
 # Joule Kitchen
 
 [![Test and deploy Pages](https://github.com/AndreKurait/joule-kitchen/actions/workflows/pages.yml/badge.svg)](https://github.com/AndreKurait/joule-kitchen/actions/workflows/pages.yml)
+[![Docker UI tests](https://github.com/AndreKurait/joule-kitchen/actions/workflows/docker.yml/badge.svg)](https://github.com/AndreKurait/joule-kitchen/actions/workflows/docker.yml)
 
 A static browser app for **Joule Turbo BSV600**. Pair over Bluetooth, watch the
 bath, and keep temperature recordings in your browser. No account, application
@@ -150,8 +151,13 @@ Joule** runs the same simulation in memory without needing Docker.
 
 The workflow in [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
 tests every pull request and every push to `main`. Only a successful `main`
-build can deploy. It uses GitHub's short-lived Pages identity, minimal job
-permissions, and pinned Action commits; no deployment secret is needed.
+build can deploy. It runs the unit and UI suites against the protocol mock on
+a GitHub container runner. The separate
+[Docker workflow](.github/workflows/docker.yml) runs the same UI suite in
+Docker and checks the published localhost port.
+
+Deployment uses GitHub's short-lived Pages identity, minimal job permissions,
+and pinned Action commits; no deployment secret is needed.
 
 For a fork, enable **Settings → Pages → Build and deployment → GitHub Actions**
 and run the workflow. Update the repository links in `src/App.tsx` and this

@@ -1,0 +1,47 @@
+name: Docker UI tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Docker UI tests against simulated GATT
+        run: docker compose -f compose.yaml -f compose.test.yaml up --build --abort-on-container-exit --exit-code-from ui-tests
+      - name: Verify mock is reachable from the host
+        run: |
+          docker compose -f compose.yaml -f compose.test.yaml up -d --wait mock
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:4173/healthz
+      - name: Container logs
+        if: failure()
+        run: docker compose -f compose.yaml -f compose.test.yaml logs --no-color
+      - name: Collect browser traces on failure
+        if: failure()
+        run: |
+          mkdir -p artifacts
+          docker compose -f compose.yaml -f compose.test.yaml cp ui-tests:/app/test-results artifacts/test-results || true
+          docker compose -f compose.yaml -f compose.test.yaml cp ui-tests:/app/playwright-report artifacts/playwright-report || true
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: failure()
+        with:
+          name: docker-browser-failure-artifacts
+          path: artifacts
+          retention-days: 7
+      - name: Stop test containers
+        if: always()
+        run: docker compose -f compose.yaml -f compose.test.yaml down

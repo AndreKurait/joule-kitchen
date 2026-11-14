@@ -4,7 +4,12 @@ CI never pairs with or controls physical hardware.
 
 The release passed **29 unit/protocol/storage checks** and **22
 Playwright UI checks** (desktop and mobile Chromium) in Docker on macOS/arm64.
+The same 22 UI checks also passed against the direct Node mock in Chrome on
+macOS, including automatic server startup.
 GitHub Actions repeats the same suite on Linux before deploying Pages.
+The Pages workflow starts the mock directly on its container runner. The
+separate Docker workflow builds the images, runs the same UI tests across
+containers and checks the mock's published localhost port.
 
 ## Automated checks
 
