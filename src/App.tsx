@@ -27,16 +27,7 @@ function Icon({
   size = 20,
 }: {
   name:
-    | 'bluetooth'
-    | 'chart'
-    | 'arrow'
-    | 'download'
-    | 'stop'
-    | 'clock'
-    | 'close'
-    | 'check'
-    | 'wifi'
-    | 'leaf';
+    'bluetooth' | 'chart' | 'arrow' | 'download' | 'stop' | 'clock' | 'close' | 'check' | 'leaf';
   size?: number;
 }) {
   const paths = {
@@ -48,7 +39,6 @@ function Icon({
     clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
     close: 'm6 6 12 12M6 18 18 6',
     check: 'm5 12 4 4L19 6',
-    wifi: 'M3 8a14 14 0 0 1 18 0M6 12a9 9 0 0 1 12 0M9 16a4 4 0 0 1 6 0M12 20h.01',
     leaf: 'M20 3C8 2 2 9 6 16s15 3 14-13ZM5 21 16 8',
   };
   return (
@@ -92,7 +82,6 @@ export default function App() {
   const [minutes, setMinutes] = useState(30);
   const [reviewing, setReviewing] = useState(false);
   const [waterConfirmed, setWaterConfirmed] = useState(false);
-  const [cloudOpen, setCloudOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [mock, setMock] = useState<MockWire | null>(null);
@@ -355,7 +344,7 @@ export default function App() {
             <section className="card connection-card" aria-labelledby="connection-title">
               <div className="card-kicker">
                 <Icon name="bluetooth" />
-                <span>THE CONNECTION</span>
+                <span>BLUETOOTH</span>
                 <span className={`status-dot ${connected ? 'online' : ''}`} />
               </div>
               <h2 id="connection-title">
@@ -367,8 +356,10 @@ export default function App() {
               </h2>
               <p>
                 {connected
-                  ? 'Connected directly. No account required.'
-                  : 'Pair your Joule Turbo over Bluetooth to see what’s happening in the water.'}
+                  ? simulation
+                    ? 'Connected to the simulated Joule.'
+                    : 'Connected over Bluetooth. No sign-in needed.'
+                  : 'Pair your nearby Joule Turbo over Bluetooth to see live water temperature. No sign-in needed.'}
               </p>
               {!connected && !connecting && (
                 <>
@@ -418,7 +409,7 @@ export default function App() {
                     </span>
                     <span>
                       <span className="green-dot" />
-                      {simulation ? 'Simulated Bluetooth' : 'Web Bluetooth'}
+                      {simulation ? 'Simulated Bluetooth' : 'Bluetooth'}
                     </span>
                   </div>
                   {state.proximity !== 2 && (
@@ -456,21 +447,10 @@ export default function App() {
               )}
               <div className="connection-footer">
                 <span>01</span>
-                <span>Pair. Watch. Keep the curve.</span>
+                <span>Keep this page open to record.</span>
               </div>
             </section>
 
-            <section className="card cloud-card">
-              <div className="card-kicker">
-                <Icon name="wifi" />
-                <span>WI-FI · OPTIONAL</span>
-              </div>
-              <h3>Bluetooth is enough.</h3>
-              <p>Pairing and recordings work without signing in.</p>
-              <button className="text-button" onClick={() => setCloudOpen(true)}>
-                About Wi-Fi access <span aria-hidden="true">↗</span>
-              </button>
-            </section>
             <div className="quiet-note">
               <Icon name="leaf" size={19} />
               <p>
@@ -875,36 +855,14 @@ export default function App() {
           Back to the kitchen
         </button>
       </dialog>
-      {cloudOpen && (
-        <InfoModal title="Wi-Fi is optional." close={() => setCloudOpen(false)}>
-          <p>
-            Bluetooth pairing, live temperature and browser recordings do not need a Breville
-            account.
-          </p>
-          <p>
-            Wi-Fi sign-in is not available in this static build. Breville’s current control API does
-            not permit the browser requests this app needs, and its live connection uses
-            authorization headers that browser WebSockets cannot set.
-          </p>
-          <p>
-            A supported browser login or an authenticated companion service is still needed for
-            Wi-Fi controls. This site does not collect your Breville password.
-          </p>
-          <p>
-            Account history returned cook summaries in testing, not recorded temperature curves.
-            Your curves here come from the live readings saved in this browser.
-          </p>
-        </InfoModal>
-      )}
       {aboutOpen && (
         <InfoModal title="Your kitchen, in your browser." close={() => setAboutOpen(false)}>
           <p>
-            Joule Kitchen is a static React app. Bluetooth connects this browser directly to a Joule
-            Turbo BSV600. No application server sits between them.
+            Joule Kitchen connects this browser directly to your Joule Turbo BSV600 over Bluetooth.
           </p>
           <p>
-            Recordings stay in IndexedDB on this browser and device. Export CSV to keep a copy.
-            Clearing site data removes recordings; signing into Breville does not synchronize them.
+            Recordings stay in this browser on this device. Export CSV to keep a copy. Clearing site
+            data removes recordings.
           </p>
           <p>
             Keep this page open to record. A sleeping device, background tab or lost connection can
@@ -912,7 +870,7 @@ export default function App() {
           </p>
           <p>
             The manual controller is experimental and uses a timed program for firmware 1.9.23 /
-            2.5.2. Native Turbo recipe compilation and browser Wi-Fi sign-in are not implemented.
+            2.5.2. Native Turbo recipes are not supported here.
           </p>
           <a className="button secondary" href={SOURCE} target="_blank" rel="noreferrer">
             Source, tests &amp; protocol notes ↗

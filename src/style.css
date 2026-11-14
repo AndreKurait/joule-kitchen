@@ -208,7 +208,6 @@ h1 {
   min-width: 0;
 }
 .connection-card,
-.cloud-card,
 .cook-card {
   padding: 24px;
 }
@@ -310,20 +309,6 @@ h1 {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
-.cloud-card {
-  background: #f0f2eb;
-}
-.cloud-card h3 {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  margin-top: 16px;
-}
-.cloud-card p {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 7px;
-}
 .text-button {
   border: 0;
   background: none;
@@ -332,9 +317,6 @@ h1 {
   text-align: left;
   text-decoration: underline;
   text-underline-offset: 4px;
-}
-.cloud-card .text-button {
-  margin-top: 14px;
 }
 .quiet-note {
   display: flex;
@@ -1296,11 +1278,8 @@ h1 {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
-  .cloud-card {
-    order: 3;
-  }
   .quiet-note {
-    order: 4;
+    order: 3;
   }
   .bath-illustration {
     transform: scale(1);

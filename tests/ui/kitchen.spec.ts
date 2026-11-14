@@ -31,10 +31,11 @@ test('static landing does not connect or start anything; mobile layout stays ins
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true);
-  await page.getByRole('button', { name: 'About Wi-Fi access' }).click();
-  await expect(page.getByRole('dialog')).toContainText(
-    'Wi-Fi sign-in is not available in this static build',
-  );
+  await expect(
+    page.locator('.connection-card').getByText('BLUETOOTH', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Pair Joule' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'About Wi-Fi access' })).toHaveCount(0);
   expect(await page.locator('input[type=password]').count()).toBe(0);
   expect(errors).toEqual([]);
 });

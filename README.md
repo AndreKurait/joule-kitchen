@@ -43,7 +43,7 @@ server, telemetry service, or cloud database is required for Bluetooth.
 | Manual timed cook and Stop                                | Protocol implemented and tested against the mock; real-device status is in [TESTING.md](docs/TESTING.md) |
 | Record an existing Turbo cook                             | Uses reported native mode and measured bath readings                                                     |
 | Compile/start a native Turbo food recipe entirely offline | Not implemented; food/geometry coefficients and recipe compilation need separate validation              |
-| Wi-Fi sign-in from a static browser app                   | Not available yet; see below                                                                             |
+| Wi-Fi sign-in from a static browser app                   | Not supported by this website; see below                                                                 |
 | First-time Wi-Fi provisioning, legacy Joule models        | Not implemented                                                                                          |
 | Pump-only, heater-disabled circulation, 0–1°C cooking     | Not implemented; manual range is 20–90°C                                                                 |
 | Background recording after the browser closes             | Not available; keep the page running                                                                     |
@@ -71,10 +71,11 @@ The graph measures **water**, not food core temperature or doneness.
 The appliance owns a submitted program: closing the site does not stop it.
 If Stop cannot be confirmed, check the Joule and unplug it if it is still running.
 
-### Optional Wi-Fi access
+### Bluetooth connection
 
-Bluetooth does not ask for a login. The UI explains Wi-Fi's current limitation
-and does not present a nonfunctional password form.
+This website connects over Bluetooth without a login. Select **Pair Joule**
+to connect to a nearby appliance. Wi-Fi control is not supported by this
+website, so the interface presents Bluetooth as its connection method.
 
 The investigated Breville control API rejects the cross-origin preflight
 needed by this site. Its verified live WebSocket connection also requires
