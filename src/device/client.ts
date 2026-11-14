@@ -500,8 +500,9 @@ export class JouleClient {
         }, 10000);
       }
       await this.refresh();
+      return generation === this.commandEpoch ? recipe.instructions.uuid : null;
     } catch (error) {
-      if (error instanceof Cancelled) return;
+      if (error instanceof Cancelled) return null;
       if (generation === this.commandEpoch)
         this.update({
           command: null,

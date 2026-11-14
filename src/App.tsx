@@ -8,6 +8,7 @@ import { HistoryStore, exportCsv } from './history/store.ts';
 import { Recorder } from './history/recorder.ts';
 import { TemperatureGraph } from './history/Graph.tsx';
 import { RecoverySection } from './recovery/Recovery.tsx';
+import { CleaningSection } from './cleaning/Cleaning.tsx';
 import type { Recording, Sample, Unit } from './types.ts';
 import { errorMessage, formatTemperature } from './types.ts';
 
@@ -302,6 +303,7 @@ export default function App() {
             The kitchen
           </a>
           <a href="#history">Recordings</a>
+          <a href="#cleaning">Clean</a>
           <a href="#diagnose">Diagnose</a>
           <button className="nav-button" onClick={() => setAboutOpen(true)}>
             About
@@ -756,6 +758,15 @@ export default function App() {
           </aside>
         </div>
 
+        <CleaningSection
+          client={client}
+          state={state}
+          unit={unit}
+          now={now}
+          pressSimulatedButton={async () => {
+            await mock?.action('button');
+          }}
+        />
         <RecoverySection
           connectionBusy={connected || connecting}
           disconnectProblem={client.canDisconnectForDiagnosis(now)}

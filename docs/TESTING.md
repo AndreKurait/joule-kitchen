@@ -97,6 +97,24 @@ never connects to a physical Bluetooth adapter or cloud service. It persists
 settings across simulated reconnects; it does not simulate Breville login,
 Wi-Fi provisioning or actual certificate rotation.
 
+## Guided cleaning checks
+
+The cleaning flow adds independent simulator checks for the fixed
+60°C / 140°F, 1800-second program and its automatic heater-off ending.
+Observation checks reject stale readings, another device or transport,
+reported errors and a different recipe UUID as evidence of completion.
+A confirmed stop remains available after unplugging for rinsing.
+
+Desktop and mobile browser checks cover opening instructions without
+connecting, physical-button confirmation, a fresh review checkbox, preset
+independence from the manual form and temperature units, progress, Stop,
+lost connections, another active program, the appliance timer ending the
+run, and the final rinse confirmation. Closing and reopening during an
+upload must preserve Stop and cancellation must not cause a later Start.
+
+The manufacturer guidance and supported scope are in [CLEANING.md](CLEANING.md).
+This feature has not been exercised as a physical vinegar-cleaning run.
+
 ## Physical validation scope
 
 Direct native BLE status, measured temperature, heartbeat acknowledgement and

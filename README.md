@@ -33,6 +33,10 @@ server, telemetry service, or cloud database is required for Bluetooth.
   explicit heater-off instruction. Start requires a fresh idle state, physical
   button confirmation, and an on-screen review. Stop interrupts queued uploads;
   Start is never automatically retried.
+- **Guided cleaning** with preparation and review, a 60°C / 140°F, 30-minute
+  extended vinegar bath, reported Stop, and cooling/rinsing steps. The preset
+  uses the appliance's timer and requires an explicit Start.
+  See [cleaning guidance and limits](docs/CLEANING.md).
 - An in-browser demo and a **Docker mock device** that implement the GATT
   messages used by the real adapter. Browser tests send real serialized protocol
   frames to the simulated appliance; they don't fake the UI's status endpoint.

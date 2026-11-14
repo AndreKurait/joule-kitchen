@@ -1078,6 +1078,117 @@ h1 {
   margin-top: 9px;
   color: var(--accent-dark);
 }
+.cleaning-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  padding: 28px 30px;
+  margin-top: 24px;
+  scroll-margin-top: 24px;
+  background: #f1f4ed;
+}
+.cleaning-section .eyebrow {
+  margin: 0 0 10px;
+  color: var(--green);
+  font-size: 10px;
+}
+.cleaning-section h2 {
+  font-size: 28px;
+}
+.cleaning-section p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.cleaning-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 17px;
+  font-size: 11px;
+  color: var(--green);
+}
+.cleaning-entry {
+  flex-shrink: 0;
+}
+.cleaning-entry .button {
+  width: 100%;
+  background: var(--paper);
+}
+.cleaning-entry p {
+  max-width: 200px;
+  font-size: 10px;
+  text-align: center;
+}
+.cleaning-modal {
+  max-width: 530px;
+}
+.cleaning-modal h2 {
+  font-size: 31px;
+  margin-bottom: 5px;
+}
+.cleaning-modal .cleaning-subtitle {
+  margin-top: 0;
+}
+.cleaning-steps {
+  list-style: none;
+  counter-reset: cleaning-step;
+  margin: 24px 0;
+  padding: 0;
+}
+.cleaning-steps li {
+  counter-increment: cleaning-step;
+  position: relative;
+  padding-left: 40px;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.cleaning-steps li::before {
+  content: counter(cleaning-step);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border: 1px solid #cdd6c8;
+  border-radius: 50%;
+  color: var(--green);
+}
+.cleaning-steps strong {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+}
+.cleaning-connect {
+  margin: 18px 0 10px;
+}
+.cleaning-modal .cleaning-status {
+  padding: 13px 16px;
+  border: 1px solid #d6dfd0;
+  border-radius: 8px;
+  background: #f1f4ed;
+  color: #344f40;
+}
+.cleaning-modal .control-help {
+  font-size: 11px;
+}
+.cleaning-modal .cleaning-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 22px;
+  font-size: 10px;
+  color: var(--green);
+}
+.cleaning-modal .cleaning-limit {
+  font-size: 10px;
+  margin-bottom: 0;
+}
 .recovery-section {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
@@ -1463,6 +1574,21 @@ h1 {
   }
 }
 @media (max-width: 780px) {
+  .cleaning-section {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+    padding: 22px;
+  }
+  .cleaning-section h2 {
+    font-size: 26px;
+  }
+  .cleaning-entry {
+    width: 100%;
+  }
+  .cleaning-entry p {
+    max-width: none;
+  }
   .recovery-section {
     grid-template-columns: 1fr;
     gap: 22px;
