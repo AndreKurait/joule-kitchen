@@ -1,0 +1,49 @@
+name: Publish locally validated build
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: Unique label of the temporary isolated publication runner
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.actor == 'AndreKurait' && github.ref == 'refs/heads/main'
+    runs-on: ${{ inputs.runner_label }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify application matches the locally tested release
+        run: |
+          git diff --exit-code fc937a1b12cec153634a48e4a91c2add7f66c023 HEAD -- . ':!.github' ':!README.md' ':!docs'
+      - run: npm ci
+      - name: Repeat unit tests, typecheck and production build
+        run: npm run check
+      - name: Verify exact static files tested by 22 Docker UI checks
+        run: |
+          mkdir /tmp/validated-site
+          git archive e94419919216b3baf9ab84589b8dbe7f63c225d0 | tar -x -C /tmp/validated-site
+          touch dist/.nojekyll
+          diff --recursive /tmp/validated-site dist
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: dist
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
