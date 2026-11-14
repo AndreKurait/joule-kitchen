@@ -1,4 +1,4 @@
-FROM node:24.16.0-bookworm-slim@sha256:2c87ef9bd3c6a3bd4b472b4bec2ce9d16354b0c574f736c476489d09f560a203
+FROM node:26.13.0-bookworm-slim@sha256:add5c17c14752c54d2f3d519ec46a3815684d41c33f198bcb09fb998f7dcbf68
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright

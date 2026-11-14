@@ -1,11 +1,11 @@
-FROM node:24.16.0-bookworm-slim@sha256:2c87ef9bd3c6a3bd4b472b4bec2ce9d16354b0c574f736c476489d09f560a203 AS build
+FROM node:26.13.0-bookworm-slim@sha256:add5c17c14752c54d2f3d519ec46a3815684d41c33f198bcb09fb998f7dcbf68 AS build
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:24.16.0-bookworm-slim@sha256:2c87ef9bd3c6a3bd4b472b4bec2ce9d16354b0c574f736c476489d09f560a203 AS mock
+FROM node:26.13.0-bookworm-slim@sha256:add5c17c14752c54d2f3d519ec46a3815684d41c33f198bcb09fb998f7dcbf68 AS mock
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /app/node_modules/ws ./node_modules/ws
