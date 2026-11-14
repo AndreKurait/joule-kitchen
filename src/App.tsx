@@ -207,6 +207,17 @@ export default function App() {
       await connect(wire);
     });
   }
+  async function disconnectKitchen(forDiagnosis = false) {
+    try {
+      if (forDiagnosis) await client.disconnectForDiagnosis();
+      else await client.disconnect();
+    } finally {
+      if (['disconnected', 'error'].includes(client.getSnapshot().phase)) {
+        await recorder.end();
+        refreshRecordings();
+      }
+    }
+  }
   const mockAction = (action: MockAction) =>
     perform(async () => {
       await mock?.action(action);
@@ -435,13 +446,7 @@ export default function App() {
                   <button
                     className="text-button"
                     disabled={!!state.command}
-                    onClick={() =>
-                      void perform(async () => {
-                        await client.disconnect();
-                        await recorder.end();
-                        refreshRecordings();
-                      })
-                    }
+                    onClick={() => void perform(() => disconnectKitchen())}
                   >
                     Disconnect
                   </button>
@@ -751,7 +756,12 @@ export default function App() {
           </aside>
         </div>
 
-        <RecoverySection connectionBusy={connected || connecting} support={support} />
+        <RecoverySection
+          connectionBusy={connected || connecting}
+          disconnectProblem={client.canDisconnectForDiagnosis(now)}
+          disconnectKitchen={() => disconnectKitchen(true)}
+          support={support}
+        />
 
         {simulation && connected && (
           <details className="mock-controls">

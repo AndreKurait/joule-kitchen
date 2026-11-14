@@ -102,6 +102,12 @@ changes and shows its findings before suggesting a fix. It currently checks
 for one verified server-address fault on BSV600 / communication firmware
 1.9.23; it cannot diagnose every cause of an offline Joule.
 
+If **Start diagnosis** is disabled because the kitchen is already connected,
+select **Disconnect kitchen** inside the dialog, then **Start diagnosis**.
+Saved recordings remain available. The disconnect action requires a fresh idle
+reading and no pending cooking command; otherwise, the dialog explains what
+needs attention and provides **Return to kitchen**.
+
 For that exact fault, **Review suggested fix** offers to restore the server
 hostname read from the same appliance. It preserves Wi-Fi credentials and
 firmware, then guides a restart and a read-only recheck. A matching address,

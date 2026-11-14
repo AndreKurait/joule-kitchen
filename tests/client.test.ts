@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DemoGatt } from '../src/device/mock.ts';
 import { JouleClient } from '../src/device/client.ts';
 import { decoder, Message, UUID } from '../src/device/protocol.ts';
 
 const clients: JouleClient[] = [];
 afterEach(async () => {
+  vi.restoreAllMocks();
   await Promise.all(clients.splice(0).map((client) => client.disconnect().catch(() => {})));
 });
 async function connected() {
@@ -107,8 +108,51 @@ describe('command lifecycle against independent simulated appliance', () => {
     await client.start({ temperatureC: 30, durationSeconds: 10 });
     expect(client.getSnapshot().status?.state).toBe('idle');
     expect(client.canStart()).toContain('not confirmed');
+    const beforeDiagnosis = wire.device.commands.length;
+    await expect(client.disconnectForDiagnosis()).rejects.toThrow('command to finish');
+    expect(wire.device.commands).toHaveLength(beforeDiagnosis);
+    expect(client.getSnapshot().phase).toBe('connected');
     await expect(client.start({ temperatureC: 30, durationSeconds: 10 })).rejects.toThrow();
     await client.stop();
     expect(client.canStart()).toBeNull();
+  });
+});
+
+describe('switching from monitoring to diagnosis', () => {
+  it('releases an idle kitchen session without starting or stopping a cook', async () => {
+    const { client, wire } = await connected();
+    const before = wire.device.commands.length;
+    await client.disconnectForDiagnosis();
+    expect(client.getSnapshot().phase).toBe('disconnected');
+    expect(wire.device.commands.slice(before).map((command) => command.type)).toEqual([
+      Message.ModeRequest,
+    ]);
+  });
+  it('leaves a running cook and its connection untouched', async () => {
+    const { client, wire } = await connected();
+    await wire.action('turbo');
+    const before = wire.device.commands.length;
+    await expect(client.disconnectForDiagnosis()).rejects.toThrow('current cook');
+    expect(client.getSnapshot()).toMatchObject({
+      phase: 'connected',
+      status: { state: 'cooking' },
+    });
+    expect(wire.device.commands).toHaveLength(before);
+  });
+  it('rechecks freshness when the action is invoked, even after an earlier idle reading', async () => {
+    const { client, wire } = await connected();
+    expect(client.canDisconnectForDiagnosis()).toBeNull();
+    const before = wire.device.commands.length;
+    vi.spyOn(Date, 'now').mockReturnValue(client.getSnapshot().status!.at + 16000);
+    await expect(client.disconnectForDiagnosis()).rejects.toThrow('fresh idle reading');
+    expect(client.getSnapshot().phase).toBe('connected');
+    expect(wire.device.commands).toHaveLength(before);
+  });
+  it('does not cancel a kitchen device chooser', async () => {
+    const client = new JouleClient();
+    clients.push(client);
+    client.choosing();
+    await expect(client.disconnectForDiagnosis()).rejects.toThrow('Finish or cancel');
+    expect(client.getSnapshot().phase).toBe('choosing');
   });
 });

@@ -171,11 +171,76 @@ test('opening diagnosis never interrupts an existing kitchen session', async ({ 
   await page.getByRole('button', { name: 'Try a simulated Joule' }).click();
   await expect(page.getByTestId('device-state')).toHaveText('Idle');
   await page.getByRole('button', { name: 'Diagnose connection', exact: true }).click();
-  await expect(
-    page.getByText('The kitchen already has a Bluetooth session open.', { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByText('Disconnect the kitchen first.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Disconnect kitchen', exact: true })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Start diagnosis' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Preview a diagnosis' })).toBeDisabled();
   await page.getByRole('button', { name: 'Close diagnosis', exact: true }).click();
   await expect(page.getByTestId('device-state')).toHaveText('Idle');
+});
+
+test('disconnecting inside diagnosis preserves recordings and enables a separate chooser click', async ({
+  page,
+}) => {
+  // Simulate Bluetooth support on Docker's insecure http://mock origin.
+  // Monitoring and recording still use the GATT simulator, and the synthetic
+  // chooser below cannot make a real Bluetooth request.
+  await page.addInitScript(() => {
+    const audit = { calls: [] as boolean[] };
+    Object.defineProperty(window, 'diagnosisChooserAudit', { value: audit });
+    Object.defineProperty(window, 'isSecureContext', { value: true });
+    Object.defineProperty(navigator, 'bluetooth', {
+      configurable: true,
+      value: {
+        getDevices: async () => [],
+        requestDevice: async () => {
+          audit.calls.push(navigator.userActivation.isActive);
+          throw new DOMException('Simulated chooser cancelled.', 'NotFoundError');
+        },
+      },
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Try a simulated Joule' }).click();
+  await expect(page.getByTestId('device-state')).toHaveText('Idle');
+  await expect(page.getByTestId('sample-count')).toHaveText(/[1-9]\d* readings saved/);
+  await page.getByRole('button', { name: 'Diagnose connection', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Start diagnosis' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Disconnect kitchen', exact: true }).click();
+  await expect(page.getByText('Kitchen disconnected.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start diagnosis' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Start diagnosis' })).toBeFocused();
+  expect(await page.evaluate(() => Reflect.get(window, 'diagnosisChooserAudit').calls)).toEqual([]);
+  await page.getByRole('button', { name: 'Start diagnosis' }).click();
+  await expect(page.getByRole('heading', { name: 'Let’s check your Joule.' })).toBeVisible();
+  expect(await page.evaluate(() => Reflect.get(window, 'diagnosisChooserAudit').calls)).toEqual([
+    true,
+  ]);
+  await page.getByRole('button', { name: 'Close diagnosis', exact: true }).click();
+  await expect(page.getByTestId('device-state')).toHaveText('Disconnected');
+  await page.reload();
+  const recording = page.getByLabel('Recording', { exact: true });
+  await expect(recording.locator('option')).toHaveCount(2);
+  await recording.selectOption({ index: 1 });
+  await expect(page.getByTestId('temperature-path')).toHaveAttribute('d', /M/);
+});
+
+test('diagnosis explains a running cook and cannot disconnect or stop it', async ({ page }) => {
+  await page.goto('/?mock=server');
+  await page.getByRole('button', { name: 'Try a simulated Joule' }).click();
+  await expect(page.getByTestId('device-state')).toHaveText('Idle');
+  await page.locator('.mock-controls summary').click();
+  await page.getByRole('button', { name: 'Simulate Turbo status' }).click();
+  await expect(page.getByTestId('device-state')).toHaveText('Turbo');
+  await page.getByRole('button', { name: 'Diagnose connection', exact: true }).click();
+  await expect(
+    page.getByText('Finish or stop the current cook in the kitchen before starting diagnosis.'),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Disconnect kitchen', exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Start diagnosis' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Return to kitchen', exact: true }).click();
+  await expect(page.getByTestId('device-state')).toHaveText('Turbo');
+  await expect(page.getByTestId('target-temperature')).toHaveText('68.0°C');
 });

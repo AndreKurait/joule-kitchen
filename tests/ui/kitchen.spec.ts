@@ -166,6 +166,14 @@ test('stale data disables Start and the graph marks the resumed observation gap'
     timeout: 19000,
   });
   await expect(page.getByRole('button', { name: 'Review manual cook' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Diagnose connection', exact: true }).click();
+  await expect(
+    page.getByText('Wait for a fresh idle reading in the kitchen before switching to diagnosis.'),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Disconnect kitchen', exact: true }),
+  ).toBeDisabled();
+  await page.getByRole('button', { name: 'Return to kitchen', exact: true }).click();
   await page.getByRole('button', { name: 'Resume readings' }).click();
   await expect(page.getByRole('button', { name: 'Review manual cook' })).toBeEnabled();
   const path = await page.getByTestId('temperature-path').getAttribute('d');

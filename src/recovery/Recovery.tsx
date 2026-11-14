@@ -7,13 +7,19 @@ import { errorMessage } from '../types.ts';
 
 const NOTES = 'https://github.com/AndreKurait/joule-kitchen/blob/main/docs/RECOVERY.md';
 
+interface ConnectionProps {
+  connectionBusy: boolean;
+  disconnectProblem: string | null;
+  disconnectKitchen: () => Promise<void>;
+  support: string | null;
+}
+
 export function RecoverySection({
   connectionBusy,
+  disconnectProblem,
+  disconnectKitchen,
   support,
-}: {
-  connectionBusy: boolean;
-  support: string | null;
-}) {
+}: ConnectionProps) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -52,6 +58,8 @@ export function RecoverySection({
         <RecoveryDialog
           close={() => setOpen(false)}
           connectionBusy={connectionBusy}
+          disconnectProblem={disconnectProblem}
+          disconnectKitchen={disconnectKitchen}
           support={support}
         />
       )}
@@ -145,11 +153,11 @@ function DiagnosticFindings({ diagnosis }: { diagnosis: RecoveryDiagnosis }) {
 function RecoveryDialog({
   close,
   connectionBusy,
+  disconnectProblem,
+  disconnectKitchen,
   support,
-}: {
+}: ConnectionProps & {
   close: () => void;
-  connectionBusy: boolean;
-  support: string | null;
 }) {
   const [recovery] = useState(() => new ConnectionRecovery());
   const state = useSyncExternalStore(recovery.subscribe, recovery.getSnapshot);
@@ -157,8 +165,13 @@ function RecoveryDialog({
   const [idleConfirmed, setIdleConfirmed] = useState(false);
   const [scenario, setScenario] = useState<RecoveryScenario>('broken');
   const [uiError, setUiError] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [kitchenReleased, setKitchenReleased] = useState(false);
+  const releasing = useRef(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const startButton = useRef<HTMLButtonElement>(null);
+  const sessionBusy = connectionBusy || disconnecting;
   const writing = state.phase === 'repairing';
   const busy = writing || state.phase === 'checking' || state.phase === 'choosing';
   const simulation = state.kind === 'mock';
@@ -184,6 +197,9 @@ function RecoveryDialog({
     if (reviewing) heading.current?.focus();
   }, [reviewing]);
   useEffect(() => {
+    if (kitchenReleased && !sessionBusy && !support) startButton.current?.focus();
+  }, [kitchenReleased, sessionBusy, support]);
+  useEffect(() => {
     if (!writing) return;
     const beforeClose = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener('beforeunload', beforeClose);
@@ -191,7 +207,7 @@ function RecoveryDialog({
   }, [writing]);
 
   async function choose() {
-    if (connectionBusy) return;
+    if (sessionBusy) return;
     setUiError(null);
     try {
       recovery.choosing();
@@ -202,7 +218,7 @@ function RecoveryDialog({
     }
   }
   async function preview() {
-    if (connectionBusy) return;
+    if (sessionBusy) return;
     setUiError(null);
     try {
       const { RecoveryDemoGatt } = await import('../../mock/recovery.ts');
@@ -212,12 +228,27 @@ function RecoveryDialog({
     }
   }
   async function perform(operation: () => Promise<void>) {
-    if (connectionBusy) return;
+    if (sessionBusy) return;
     setUiError(null);
     try {
       await operation();
     } catch (error) {
       setUiError(errorMessage(error));
+    }
+  }
+  async function releaseKitchen() {
+    if (releasing.current || disconnectProblem) return;
+    releasing.current = true;
+    setDisconnecting(true);
+    setUiError(null);
+    try {
+      await disconnectKitchen();
+      setKitchenReleased(true);
+    } catch (error) {
+      setUiError(errorMessage(error));
+    } finally {
+      releasing.current = false;
+      setDisconnecting(false);
     }
   }
   function downloadReport() {
@@ -272,10 +303,30 @@ function RecoveryDialog({
         {titleFor(state, reviewing)}
       </h2>
 
-      {connectionBusy && (
-        <p className="recovery-callout" role="status">
-          The kitchen already has a Bluetooth session open. Finish your cook and disconnect there
-          before starting a diagnosis.
+      {sessionBusy && (
+        <div className="recovery-callout diagnosis-connection-blocker" role="status">
+          <p id="diagnosis-connection-blocker">
+            <strong>Disconnect the kitchen first.</strong>{' '}
+            {disconnectProblem ||
+              'The kitchen is using Bluetooth to record temperatures. Disconnect it here, then start diagnosis. Saved readings stay in Recordings.'}
+          </p>
+          <button
+            className="button secondary full"
+            disabled={disconnecting || !!disconnectProblem}
+            onClick={() => void releaseKitchen()}
+          >
+            {disconnecting ? 'Disconnecting kitchen…' : 'Disconnect kitchen'}
+          </button>
+          {disconnectProblem && (
+            <button className="text-button recovery-back" onClick={close}>
+              Return to kitchen
+            </button>
+          )}
+        </div>
+      )}
+      {kitchenReleased && !sessionBusy && state.phase === 'ready' && (
+        <p className="recovery-read-only" role="status">
+          Kitchen disconnected. Your saved readings are still in Recordings.
         </p>
       )}
       {problem && (
@@ -299,13 +350,15 @@ function RecoveryDialog({
           </p>
           <button
             className="button primary full"
-            disabled={!!support || connectionBusy}
+            ref={startButton}
+            disabled={!!support || sessionBusy}
+            aria-describedby={sessionBusy ? 'diagnosis-connection-blocker' : undefined}
             onClick={() => void choose()}
           >
             Start diagnosis
           </button>
           {support && <p className="support-note">{support}</p>}
-          <button className="demo-button" disabled={connectionBusy} onClick={() => void preview()}>
+          <button className="demo-button" disabled={sessionBusy} onClick={() => void preview()}>
             Preview a diagnosis ↗
           </button>
           <details className="recovery-help">
@@ -385,7 +438,7 @@ function RecoveryDialog({
                 </p>
                 <button
                   className="button primary full"
-                  disabled={connectionBusy}
+                  disabled={sessionBusy}
                   onClick={() => {
                     setIdleConfirmed(false);
                     setReviewing(true);
@@ -432,7 +485,7 @@ function RecoveryDialog({
           </label>
           <button
             className="button primary full"
-            disabled={!idleConfirmed || connectionBusy}
+            disabled={!idleConfirmed || sessionBusy}
             onClick={() => void perform(() => recovery.repair(idleConfirmed))}
           >
             {simulation ? 'Restore simulated address' : 'Restore server address'}
@@ -450,7 +503,7 @@ function RecoveryDialog({
           </p>
           <button
             className="button primary full"
-            disabled={connectionBusy}
+            disabled={sessionBusy}
             onClick={() => void perform(() => recovery.recheck())}
           >
             Recheck saved address
@@ -478,7 +531,7 @@ function RecoveryDialog({
           </ol>
           <button
             className="button secondary full"
-            disabled={connectionBusy}
+            disabled={sessionBusy}
             onClick={() => void perform(() => recovery.recheck())}
           >
             Recheck saved address
@@ -505,7 +558,7 @@ function RecoveryDialog({
           </p>
           <button
             className="button primary full"
-            disabled={!!support || connectionBusy}
+            disabled={!!support || sessionBusy}
             onClick={() => void choose()}
           >
             Choose Joule again
@@ -530,7 +583,7 @@ function RecoveryDialog({
           </select>
           <button
             className="button secondary full"
-            disabled={connectionBusy}
+            disabled={sessionBusy}
             onClick={() => void preview()}
           >
             Run simulated check

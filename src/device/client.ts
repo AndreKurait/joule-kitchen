@@ -318,6 +318,24 @@ export class JouleClient {
       this.lost(null);
     }
   }
+  canDisconnectForDiagnosis(now = Date.now()): string | null {
+    const { phase, status, command, error } = this.snapshot;
+    if (phase === 'choosing' || phase === 'connecting')
+      return 'Finish or cancel the kitchen connection before starting diagnosis.';
+    if (phase !== 'connected') return null;
+    if (command || this.pendingStartUuid || this.stopTask)
+      return 'Wait for the kitchen command to finish before switching to diagnosis.';
+    if (!status || now - status.at > 15000 || error)
+      return 'Wait for a fresh idle reading in the kitchen before switching to diagnosis.';
+    if (status.state !== 'idle')
+      return 'Finish or stop the current cook in the kitchen before starting diagnosis.';
+    return null;
+  }
+  async disconnectForDiagnosis() {
+    const problem = this.canDisconnectForDiagnosis();
+    if (problem) throw new Error(problem);
+    await this.disconnect();
+  }
   private async write(
     characteristic: string,
     bytes: Uint8Array,

@@ -50,10 +50,14 @@ particular agent, Mac setting, or app version.
 ## Diagnose first, then choose a next step
 
 1. Finish any cook. Leave the Joule plugged in and nearby, and close Breville+
-   or another app using its Bluetooth connection. Disconnect the kitchen's
-   monitoring session if one is open.
+   or another app using its Bluetooth connection. If the kitchen is already
+   connected, use **Disconnect kitchen** inside the diagnosis dialog. This
+   releases Bluetooth and ends recording while preserving saved readings.
+   The action requires a fresh idle status and no pending cooking command.
 2. Select **Diagnose connection → Start diagnosis** in a browser that supports
    Web Bluetooth, then select the appliance in the browser's device picker.
+   **Start diagnosis** becomes available after disconnecting; it opens the
+   device picker only when selected, not automatically after disconnect.
 3. Read the findings. This check only reads settings, then releases Bluetooth.
    A matching address needs no repair; continue with Wi-Fi and account setup
    in Breville+. An unknown device, firmware, address format or fault is

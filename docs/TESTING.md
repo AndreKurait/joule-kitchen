@@ -2,8 +2,8 @@
 
 CI never pairs with or controls physical hardware.
 
-The app's diagnosis release passed **65 unit/protocol/storage checks** and
-**32 Playwright UI checks** (desktop and mobile Chromium) in Docker on macOS/arm64.
+The app's diagnosis release passed **69 unit/protocol/storage checks** and
+**36 Playwright UI checks** (desktop and mobile Chromium) in Docker on macOS/arm64.
 The earlier Bluetooth release's 22 UI checks also passed against the direct
 Node mock in Chrome on macOS, including automatic server startup.
 GitHub Actions is configured to repeat the same suite on Linux before deploying Pages.
@@ -86,6 +86,11 @@ explicitly untested Wi-Fi/account access before any fix is offered. They
 cover the simulated repair review, confirmation, readback, recheck and
 diagnostic download, plus healthy/unrecognized/unsupported outcomes,
 connection loss and opening diagnosis while monitoring is already connected.
+Switching from an idle kitchen session is explicit, preserves recordings and
+requires a separate click to open the device chooser. A synthetic chooser
+records that click's user activation and immediately cancels; it never accesses
+hardware. Running cooks, stale readings and pending commands cannot be
+disconnected by this action.
 
 The recovery demo runs inside the browser, including in Docker UI tests, and
 never connects to a physical Bluetooth adapter or cloud service. It persists
