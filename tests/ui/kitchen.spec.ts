@@ -176,8 +176,8 @@ test('stale data disables Start and the graph marks the resumed observation gap'
   await page.getByRole('button', { name: 'Return to kitchen', exact: true }).click();
   await page.getByRole('button', { name: 'Resume readings' }).click();
   await expect(page.getByRole('button', { name: 'Review manual cook' })).toBeEnabled();
-  const path = await page.getByTestId('temperature-path').getAttribute('d');
-  expect(path!.split('M').length).toBeGreaterThan(2);
+  // Live status updates before IndexedDB finishes saving the graph point.
+  await expect(page.getByTestId('temperature-path')).toHaveAttribute('d', /M[^M]*M/);
 });
 
 test('mock service rejects cross-origin WebSocket access', async ({ page }) => {
