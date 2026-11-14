@@ -1133,7 +1133,8 @@ h1 {
 }
 .recovery-steps {
   display: flex;
-  gap: 18px;
+  flex-wrap: wrap;
+  gap: 12px 18px;
   padding: 0;
   margin: 18px 0 24px;
   list-style: none;
@@ -1194,6 +1195,61 @@ h1 {
 }
 .recovery-working .spinner {
   flex-shrink: 0;
+}
+.diagnosis-findings {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  margin-block: 20px;
+  font-size: 12px;
+}
+.diagnosis-findings > div {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
+  gap: 16px;
+  padding: 13px 15px;
+}
+.diagnosis-findings > div + div {
+  border-top: 1px solid var(--line);
+}
+.diagnosis-findings dt {
+  color: var(--muted);
+  line-height: 1.5;
+}
+.diagnosis-findings dd {
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.diagnosis-findings dd > span {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.diagnosis-status {
+  font-weight: 600;
+}
+.diagnosis-status.pass {
+  color: var(--green);
+}
+.diagnosis-status.fault {
+  color: var(--accent-dark);
+}
+.diagnosis-status.unknown {
+  color: var(--muted);
+}
+.diagnosis-next {
+  background: #f3f5ee;
+  border-radius: 9px;
+  padding: 18px;
+}
+.diagnosis-next h3 {
+  font-family: Georgia, serif;
+  font-size: 21px;
+  font-weight: 400;
+}
+.diagnosis-next > p:last-child {
+  margin-bottom: 0;
 }
 .recovery-device {
   display: flex;

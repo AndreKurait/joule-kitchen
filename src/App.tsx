@@ -291,7 +291,7 @@ export default function App() {
             The kitchen
           </a>
           <a href="#history">Recordings</a>
-          <a href="#recovery">Recovery</a>
+          <a href="#diagnose">Diagnose</a>
           <button className="nav-button" onClick={() => setAboutOpen(true)}>
             About
           </button>
@@ -451,8 +451,8 @@ export default function App() {
                 <span>01</span>
                 <span>
                   Keep this page open to record.
-                  <a className="recovery-shortcut" href="#recovery">
-                    Stuck connecting? Try recovery ↗
+                  <a className="recovery-shortcut" href="#diagnose">
+                    Trouble with Breville+? Diagnose ↗
                   </a>
                 </span>
               </div>

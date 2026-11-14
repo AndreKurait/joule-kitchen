@@ -229,7 +229,7 @@ export class ConnectionRecovery {
       referenceHost: null,
       networkSetupIdle: null,
       explanation:
-        'This repair has only been verified for Joule Turbo BSV600, platform APN3/A0/AZ/EX04, with communication firmware 1.9.23. This device does not match.',
+        'The server-address check supports Joule Turbo BSV600, platform APN3/A0/AZ/EX04, with communication firmware 1.9.23. This device does not match, so its address was not checked.',
       checkedAt: Date.now(),
     };
     if (!supportedPlatform(parts))

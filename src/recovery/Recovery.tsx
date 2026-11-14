@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { BrowserGatt } from '../device/bluetooth.ts';
 import { ConnectionRecovery } from '../device/recovery.ts';
-import type { RecoverySnapshot } from '../device/recovery.ts';
+import type { RecoveryDiagnosis, RecoverySnapshot } from '../device/recovery.ts';
 import type { RecoveryScenario } from '../../mock/recovery.ts';
 import { errorMessage } from '../types.ts';
 
@@ -17,33 +17,34 @@ export function RecoverySection({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <section className="card recovery-section" id="recovery" aria-labelledby="recovery-title">
+      <section className="card recovery-section" id="diagnose" aria-labelledby="diagnosis-title">
         <div className="recovery-intro">
-          <p className="eyebrow">CONNECTION RECOVERY</p>
-          <h2 id="recovery-title">Stuck on “Securing Connection”?</h2>
+          <p className="eyebrow">CONNECTION HELP</p>
+          <h2 id="diagnosis-title">Can’t connect to Breville+?</h2>
           <p>
-            A Joule that looks bricked may have a broken server setting. Check for the fault we
-            recovered from, then review the repair before changing anything.
+            Stuck on “Securing Connection” or seeing your Joule as offline? Check its settings over
+            Bluetooth, see what we find, then choose a suggested fix if one is available.
           </p>
           <button className="button primary" onClick={() => setOpen(true)}>
-            Open recovery <span aria-hidden="true">↗</span>
+            Diagnose connection <span aria-hidden="true">↗</span>
           </button>
           <p className="recovery-scope">
-            Joule Turbo BSV600 · firmware 1.9.23 · checks over Bluetooth
+            Server-address check · Joule Turbo BSV600 · communication firmware 1.9.23
           </p>
         </div>
         <div className="recovery-story">
-          <h3>The Joule that looked bricked.</h3>
+          <h3>Why this check exists.</h3>
           <p>
             Ours still answered Bluetooth and joined Wi-Fi, but Breville+ could not finish
-            connecting. Its saved server address had become an invalid single byte.
+            connecting. What looked like a bricked Joule turned out to have an invalid saved server
+            address.
           </p>
           <p>
             Restoring the hostname stored on the Joule brought it back. We verified live readings,
             pump start and stop, and reconnection after unplugging it. The firmware stayed the same.
           </p>
           <a href={NOTES} target="_blank" rel="noreferrer">
-            What we found &amp; what this can fix ↗
+            Read the diagnosis &amp; repair notes ↗
           </a>
         </div>
       </section>
@@ -59,10 +60,10 @@ export function RecoverySection({
 }
 
 function titleFor(state: RecoverySnapshot, reviewing: boolean) {
-  if (reviewing) return 'Review the address repair.';
+  if (reviewing) return 'Review the suggested fix.';
   switch (state.phase) {
     case 'ready':
-      return 'Let’s check the connection.';
+      return 'Let’s check your Joule.';
     case 'choosing':
       return 'Choose your Joule.';
     case 'checking':
@@ -70,7 +71,7 @@ function titleFor(state: RecoverySnapshot, reviewing: boolean) {
     case 'repairing':
       return 'Restoring the server address…';
     case 'repaired':
-      return state.rechecked ? 'Address still matches.' : 'Address restored. Reconnect next.';
+      return state.rechecked ? 'Address still matches.' : 'Address restored. Check Breville+ next.';
     case 'uncertain':
       return 'Write result not confirmed.';
     case 'error':
@@ -78,15 +79,67 @@ function titleFor(state: RecoverySnapshot, reviewing: boolean) {
     case 'checked':
       switch (state.diagnosis?.finding) {
         case 'known-fault':
-          return 'We found the known fault.';
+          return 'A server-address fault was found.';
         case 'correct':
-          return 'Your server address already matches.';
+          return 'The saved server address matches.';
         case 'unsupported':
-          return 'This repair doesn’t match your Joule.';
+          return 'The diagnosis is incomplete.';
         default:
-          return 'Different setting. No repair offered.';
+          return 'This setting needs further diagnosis.';
       }
   }
+}
+
+function DiagnosticFindings({ diagnosis }: { diagnosis: RecoveryDiagnosis }) {
+  const supported = diagnosis.currentHex !== null;
+  const addressResult = !supported
+    ? 'Not checked'
+    : {
+        'known-fault': 'Fault found',
+        correct: 'Matches built-in address',
+        unsupported: 'Inconclusive',
+        unrecognized: 'Unrecognized setting',
+      }[diagnosis.finding];
+  const addressTone =
+    diagnosis.finding === 'known-fault'
+      ? 'fault'
+      : diagnosis.finding === 'correct'
+        ? 'pass'
+        : 'unknown';
+  return (
+    <dl className="diagnosis-findings" aria-label="Diagnostic findings">
+      <div>
+        <dt>Bluetooth</dt>
+        <dd>
+          <strong className="diagnosis-status pass">Responding</strong>
+        </dd>
+      </div>
+      <div>
+        <dt>Device compatibility</dt>
+        <dd>
+          <strong className={`diagnosis-status ${supported ? 'pass' : 'unknown'}`}>
+            {supported ? 'Supported for this check' : 'Outside this check’s scope'}
+          </strong>
+          <span>
+            {diagnosis.model} · firmware {diagnosis.commFirmware}
+          </span>
+        </dd>
+      </div>
+      <div>
+        <dt>Server address</dt>
+        <dd>
+          <strong className={`diagnosis-status ${addressTone}`}>{addressResult}</strong>
+        </dd>
+      </div>
+      <div>
+        <dt>Wi-Fi &amp; Breville account</dt>
+        <dd>
+          <strong className="diagnosis-status unknown">Not checked</strong>
+          <span>Internet access and app sign-in aren’t tested here.</span>
+        </dd>
+      </div>
+    </dl>
+  );
 }
 
 function RecoveryDialog({
@@ -114,7 +167,7 @@ function RecoveryDialog({
   const uncertain = state.phase === 'uncertain';
   const checked = state.phase === 'checked';
   const problem = uiError || state.error;
-  const step = reviewing || writing ? 2 : repaired || uncertain ? 3 : 1;
+  const step = reviewing || writing || repaired || uncertain ? 3 : checked ? 2 : 1;
 
   useEffect(() => {
     dialog.current?.showModal();
@@ -193,18 +246,18 @@ function RecoveryDialog({
       }}
     >
       <div className="modal-heading">
-        <span className="eyebrow">JOULE RECOVERY · BLUETOOTH</span>
+        <span className="eyebrow">CONNECTION DIAGNOSIS · BLUETOOTH</span>
         <button
           className="icon-button"
           onClick={close}
           disabled={writing}
-          aria-label="Close recovery"
+          aria-label="Close diagnosis"
         >
           <span aria-hidden="true">×</span>
         </button>
       </div>
-      <ol className="recovery-steps" aria-label="Recovery progress">
-        {['Check', 'Review', 'Reconnect'].map((label, index) => (
+      <ol className="recovery-steps" aria-label="Diagnosis progress">
+        {['Check', 'Findings', 'Next steps'].map((label, index) => (
           <li key={label} aria-current={step === index + 1 ? 'step' : undefined}>
             <span>{index + 1}</span> {label}
           </li>
@@ -222,7 +275,7 @@ function RecoveryDialog({
       {connectionBusy && (
         <p className="recovery-callout" role="status">
           The kitchen already has a Bluetooth session open. Finish your cook and disconnect there
-          before checking recovery.
+          before starting a diagnosis.
         </p>
       )}
       {problem && (
@@ -233,30 +286,34 @@ function RecoveryDialog({
       {state.phase === 'ready' && (
         <>
           <p>
-            Leave your Joule plugged in and nearby. Close Breville+ on your phone, then choose your
-            appliance in the browser’s Bluetooth picker.
+            We’ll check Bluetooth response, identify the model and firmware, and compare the saved
+            server address with the Joule’s built-in address on supported devices.
           </p>
           <p className="recovery-callout">
-            <strong>The first check only reads settings.</strong> A repair is offered only when the
-            device and fault match the verified recovery.
+            <strong>Diagnosis only. No settings are changed.</strong> You’ll see the findings first,
+            with a suggested fix only if we identify the known fault.
+          </p>
+          <p>
+            Leave your Joule plugged in and nearby. Close Breville+ on your phone, then choose your
+            appliance in the browser’s Bluetooth picker.
           </p>
           <button
             className="button primary full"
             disabled={!!support || connectionBusy}
             onClick={() => void choose()}
           >
-            Check my Joule
+            Start diagnosis
           </button>
           {support && <p className="support-note">{support}</p>}
           <button className="demo-button" disabled={connectionBusy} onClick={() => void preview()}>
-            Preview with a simulated fault ↗
+            Preview a diagnosis ↗
           </button>
           <details className="recovery-help">
-            <summary>What can this fix?</summary>
+            <summary>What can this diagnose?</summary>
             <p>
               One known malformed server setting on Turbo BSV600, communication firmware 1.9.23. The
-              device must still answer Bluetooth. This cannot fix damaged electronics or firmware,
-              and does not set up a Wi-Fi network or account.
+              device must still answer Bluetooth. Wi-Fi, internet access, Breville account setup and
+              hardware faults are outside this check.
             </p>
             <p>
               The repair was verified on hardware using a native Bluetooth tool. This browser repair
@@ -279,57 +336,84 @@ function RecoveryDialog({
       {diagnosis && !busy && (
         <>
           <p>{diagnosis.explanation}</p>
-          <dl className="recovery-device">
-            <div>
-              <dt>Model</dt>
-              <dd>{diagnosis.model}</dd>
-            </div>
-            <div>
-              <dt>Communication firmware</dt>
-              <dd>{diagnosis.commFirmware}</dd>
-            </div>
-          </dl>
-          {diagnosis.currentHex !== null && (
-            <div className="recovery-addresses">
+          {checked && !reviewing && <DiagnosticFindings diagnosis={diagnosis} />}
+          <details className="recovery-help" open={reviewing || repaired || uncertain}>
+            <summary>Device details &amp; address readings</summary>
+            <dl className="recovery-device">
               <div>
-                <span>Saved server address · last read</span>
-                <code data-testid="recovery-current-address">
-                  {diagnosis.currentHost ||
-                    (diagnosis.currentHex ? `Hex: ${diagnosis.currentHex}` : 'Empty')}
-                </code>
+                <dt>Model</dt>
+                <dd>{diagnosis.model}</dd>
               </div>
               <div>
-                <span>Built-in address read from this Joule</span>
-                <code>{diagnosis.referenceHost || 'Could not validate the built-in address'}</code>
+                <dt>Communication firmware</dt>
+                <dd>{diagnosis.commFirmware}</dd>
               </div>
-            </div>
-          )}
+            </dl>
+            {diagnosis.currentHex !== null && (
+              <div className="recovery-addresses">
+                <div>
+                  <span>Saved server address · last read</span>
+                  <code data-testid="recovery-current-address">
+                    {diagnosis.currentHost ||
+                      (diagnosis.currentHex ? `Hex: ${diagnosis.currentHex}` : 'Empty')}
+                  </code>
+                </div>
+                <div>
+                  <span>Built-in address read from this Joule</span>
+                  <code>
+                    {diagnosis.referenceHost || 'Could not validate the built-in address'}
+                  </code>
+                </div>
+              </div>
+            )}
+          </details>
         </>
       )}
 
       {checked && !reviewing && (
         <>
           <p className="recovery-read-only">
-            This check made no changes. Bluetooth is disconnected.
+            This diagnosis made no changes. Bluetooth is disconnected.
           </p>
-          {diagnosis?.finding === 'known-fault' ? (
-            <button
-              className="button primary full"
-              disabled={connectionBusy}
-              onClick={() => {
-                setIdleConfirmed(false);
-                setReviewing(true);
-              }}
-            >
-              Review the repair
-            </button>
-          ) : (
-            <p className="recovery-callout">
-              {diagnosis?.finding === 'correct'
-                ? 'If Breville+ still cannot connect, check Wi-Fi and account setup in that app. A matching address alone does not confirm an internet connection.'
-                : 'No setting will be replaced. Save the diagnostic report and use Breville support for a fault outside this repair’s scope.'}
-            </p>
-          )}
+          <div className="diagnosis-next">
+            {diagnosis?.finding === 'known-fault' ? (
+              <>
+                <h3>A suggested fix is available.</h3>
+                <p>
+                  Restore the saved server address using the built-in value from this Joule. Review
+                  the exact change before deciding to apply it.
+                </p>
+                <button
+                  className="button primary full"
+                  disabled={connectionBusy}
+                  onClick={() => {
+                    setIdleConfirmed(false);
+                    setReviewing(true);
+                  }}
+                >
+                  Review suggested fix
+                </button>
+              </>
+            ) : diagnosis?.finding === 'correct' ? (
+              <>
+                <h3>Next: check Wi-Fi and account setup.</h3>
+                <p>
+                  This address needs no repair. Open Breville+ and review its Wi-Fi setup and the
+                  account your Joule is added to. A matching address alone does not confirm an
+                  internet connection.
+                </p>
+                <p>If it still cannot connect, save this report for Breville support.</p>
+              </>
+            ) : (
+              <>
+                <h3>Further diagnosis is needed.</h3>
+                <p>
+                  These readings don’t identify a supported fix. Save the diagnostic report for
+                  Breville support, including the app’s error message when you contact them.
+                </p>
+              </>
+            )}
+          </div>
         </>
       )}
       {checked && reviewing && (
@@ -354,7 +438,7 @@ function RecoveryDialog({
             {simulation ? 'Restore simulated address' : 'Restore server address'}
           </button>
           <button className="text-button recovery-back" onClick={() => setReviewing(false)}>
-            Back to the check
+            Back to findings
           </button>
         </>
       )}
@@ -466,7 +550,7 @@ function RecoveryDialog({
           Back to the kitchen
         </button>
         <a href={NOTES} target="_blank" rel="noreferrer">
-          Recovery notes ↗
+          Diagnosis &amp; repair notes ↗
         </a>
       </div>
     </dialog>

@@ -1,8 +1,15 @@
-# Recovering a stuck Joule Turbo connection
+# Diagnosing a Joule that cannot connect to Breville+
 
-Joule Kitchen includes a guided Bluetooth check and a narrowly scoped repair
-for **one verified server-address fault**. Open the site's **Recovery**
-section, then select **Open recovery**.
+Open the site's **Diagnose** section, then select **Diagnose connection**.
+Joule Kitchen checks a nearby appliance over Bluetooth, explains the findings,
+and suggests a fix only when it identifies **one verified server-address fault**.
+The diagnosis itself changes no settings.
+
+The findings distinguish Bluetooth response, compatibility with the check and
+the saved server address. Wi-Fi, internet access and Breville account sign-in
+are marked **Not checked**. This is a targeted check for a Joule stuck on
+“Securing Connection” or appearing offline, not a complete test of every
+possible connection problem.
 
 This is the fault that made our Joule Turbo appear bricked. Restoring a setting
 recovered it; its firmware did not need to be replaced. The browser repair is
@@ -40,17 +47,18 @@ logs do not identify which earlier command first wrote the malformed setting;
 the evidence establishes the fault and recovery, not attribution to a
 particular agent, Mac setting, or app version.
 
-## Use the recovery tool
+## Diagnose first, then choose a next step
 
 1. Finish any cook. Leave the Joule plugged in and nearby, and close Breville+
    or another app using its Bluetooth connection. Disconnect the kitchen's
    monitoring session if one is open.
-2. Select **Open recovery → Check my Joule** in a browser that supports
+2. Select **Diagnose connection → Start diagnosis** in a browser that supports
    Web Bluetooth, then select the appliance in the browser's device picker.
-3. Read the result. This first check only reads settings, then releases
-   Bluetooth. A matching address needs no repair. An unknown device, firmware,
-   address format or fault does not get a repair button.
-4. If the exact known fault is found, select **Review the repair**. The tool
+3. Read the findings. This check only reads settings, then releases Bluetooth.
+   A matching address needs no repair; continue with Wi-Fi and account setup
+   in Breville+. An unknown device, firmware, address format or fault is
+   reported as incomplete or needing further diagnosis, without a fix button.
+4. If the exact known fault is found, select **Review suggested fix**. The tool
    shows the saved address and the built-in hostname from that same device.
    Confirm that the Joule is not cooking, then select **Restore server address**.
 5. The tool reconnects, checks every precondition again, writes the complete
@@ -117,7 +125,7 @@ offers a read-only recheck.
 
 ## Preview and diagnostics
 
-**Preview with a simulated fault** exercises the same recovery controller
+**Preview a diagnosis** exercises the same diagnostic and repair controller
 without a real appliance. It includes a correct address, unsupported firmware,
 an unrecognized setting and a connection lost after a write. Simulated
 addresses are retained across the demo's Bluetooth reconnects.

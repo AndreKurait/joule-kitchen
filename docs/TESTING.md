@@ -2,8 +2,8 @@
 
 CI never pairs with or controls physical hardware.
 
-The recovery release passed **65 unit/protocol/storage checks** and **32
-Playwright UI checks** (desktop and mobile Chromium) in Docker on macOS/arm64.
+The app's diagnosis release passed **65 unit/protocol/storage checks** and
+**32 Playwright UI checks** (desktop and mobile Chromium) in Docker on macOS/arm64.
 The earlier Bluetooth release's 22 UI checks also passed against the direct
 Node mock in Chrome on macOS, including automatic server startup.
 GitHub Actions is configured to repeat the same suite on Linux before deploying Pages.
@@ -60,7 +60,7 @@ Docker. The mock makes no appliance or cloud requests. Its HTTP server also
 denies Bluetooth through Permissions Policy. Tests use ordinary browser
 security settings.
 
-## Recovery checks
+## Connection diagnosis and repair checks
 
 The recovery controller is exercised with a persistent in-memory GATT
 peripheral and a synthetic implementation of the browser's native GATT API.
@@ -81,10 +81,11 @@ The tests cover:
 - Diagnostic exports excluding device identifiers and never claiming cloud
   verification.
 
-Desktop and mobile browser tests exercise the simulated repair review,
-confirmation, readback, recheck and diagnostic download. They also cover
-healthy/unrecognized/unsupported outcomes, connection loss and opening the
-recovery section while monitoring is already connected.
+Desktop and mobile browser tests exercise diagnosis, separate findings and
+explicitly untested Wi-Fi/account access before any fix is offered. They
+cover the simulated repair review, confirmation, readback, recheck and
+diagnostic download, plus healthy/unrecognized/unsupported outcomes,
+connection loss and opening diagnosis while monitoring is already connected.
 
 The recovery demo runs inside the browser, including in Docker UI tests, and
 never connects to a physical Bluetooth adapter or cloud service. It persists

@@ -8,7 +8,7 @@ bath, and keep temperature recordings in your browser. No account, application
 server, telemetry service, or cloud database is required for Bluetooth.
 
 **[Open Joule Kitchen](https://andrekurait.github.io/joule-kitchen/)** ·
-[Connection recovery](docs/RECOVERY.md) · [Protocol notes](docs/PROTOCOL.md) · [Testing](docs/TESTING.md)
+[Connection diagnosis](docs/RECOVERY.md) · [Protocol notes](docs/PROTOCOL.md) · [Testing](docs/TESTING.md)
 
 > Early experimental release. Bluetooth monitoring and manual timed programs
 > are separate from Breville's native Turbo recipe system. See the tested scope
@@ -24,10 +24,11 @@ server, telemetry service, or cloud database is required for Bluetooth.
   interactive temperature graph, and visible gaps when readings stop.
 - IndexedDB recordings that survive reload, complete CSV export, and deletion.
   Simulated recordings are labelled and kept in separate sessions.
-- A **Recovery** section for the verified malformed server-address fault.
-  It checks settings over Bluetooth first, offers a reviewed repair only for
-  the exact supported fault, and reads the complete hostname back afterward.
-  See the [recovery guide and hardware evidence](docs/RECOVERY.md).
+- **Diagnose connection** for a Joule that cannot connect to Breville+.
+  Read-only checks show Bluetooth response, device compatibility and saved
+  server-address findings, with Wi-Fi and account access marked as untested.
+  A reviewed fix is offered only for the exact supported address fault.
+  See the [diagnosis guide and hardware evidence](docs/RECOVERY.md).
 - An experimental **manual timed bath** using the appliance's timer and an
   explicit heater-off instruction. Start requires a fresh idle state, physical
   button confirmation, and an on-screen review. Stop interrupts queued uploads;
@@ -96,16 +97,22 @@ incoming readings itself. That is not a claim about every internal Breville API.
 
 ### Stuck on “Securing Connection”
 
-Open **Recovery → Open recovery → Check my Joule**. The first check makes no
-changes. For the verified BSV600 / communication firmware 1.9.23 fault, the
-tool can restore the exact server hostname read from that same appliance.
-It preserves Wi-Fi credentials and firmware, then guides a restart and a
-read-only recheck. Breville+ must confirm cloud connectivity separately.
+Open **Diagnose → Diagnose connection → Start diagnosis**. The check makes no
+changes and shows its findings before suggesting a fix. It currently checks
+for one verified server-address fault on BSV600 / communication firmware
+1.9.23; it cannot diagnose every cause of an offline Joule.
+
+For that exact fault, **Review suggested fix** offers to restore the server
+hostname read from the same appliance. It preserves Wi-Fi credentials and
+firmware, then guides a restart and a read-only recheck. A matching address,
+unrecognized setting or unsupported device gets appropriate next steps
+instead of a repair. Wi-Fi and account access remain explicitly untested;
+Breville+ must confirm cloud connectivity separately.
 
 The section also explains how the investigated Joule was recovered without a
-firmware flash. It is not a general unbricking tool. Try **Preview with a
-simulated fault** to explore the flow, including a lost connection during a
-write. See [RECOVERY.md](docs/RECOVERY.md) for eligibility, limitations and
+firmware flash. Try **Preview a diagnosis** to explore the findings and
+suggested fix, including a lost connection during a write.
+See [RECOVERY.md](docs/RECOVERY.md) for eligibility, limitations and
 verification evidence.
 
 ## Run locally
