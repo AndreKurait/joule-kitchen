@@ -1,0 +1,17 @@
+services:
+  ui-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      PLAYWRIGHT_BASE_URL: http://mock:4173
+      CI: 'true'
+    depends_on:
+      mock:
+        condition: service_healthy
+    init: true
+    shm_size: 1gb
+    networks: [simulation]
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
