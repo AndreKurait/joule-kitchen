@@ -6,10 +6,23 @@ The release passed **29 unit/protocol/storage checks** and **22
 Playwright UI checks** (desktop and mobile Chromium) in Docker on macOS/arm64.
 The same 22 UI checks also passed against the direct Node mock in Chrome on
 macOS, including automatic server startup.
-GitHub Actions repeats the same suite on Linux before deploying Pages.
+GitHub Actions is configured to repeat the same suite on Linux before deploying Pages.
 The Pages workflow starts the mock directly on its container runner. The
 separate Docker workflow builds the images, runs the same UI tests across
 containers and checks the mock's published localhost port.
+
+The first Pages publication on November 14, 2026 used a temporary, isolated
+Actions runner while GitHub-hosted jobs were queued. That job repeated the
+29 unit checks and build, verified byte-for-byte equality with the static
+files tested in Docker, and successfully deployed them. The temporary runner
+was removed after publication.
+
+An anonymous browser check of the public HTTPS site verified its exact build,
+simulator controls, missing-sensor Start guard, separate measured/target graph,
+CSV export, recordings after reload and mobile layout, with no page errors.
+It sent no commands to physical hardware. The regular hosted CI workflows
+remain configured separately; the first publication does not establish that
+their queued runs passed.
 
 ## Automated checks
 
