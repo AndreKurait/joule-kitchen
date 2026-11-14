@@ -19,6 +19,7 @@ The primary application service is
 | --------------------- | ------------------------------------------------------ |
 | `ff01`                | Read serial for identity and physical-button handshake |
 | `ff05`                | Proximity/button status and requests                   |
+| `ff07`                | Saved server hostname; guarded recovery path only      |
 | `ff08`                | Incoming JSON control notifications                    |
 | `ff09`                | Outgoing JSON control messages, acknowledged writes    |
 | `ff0a`                | Incoming bulk payload fragments                        |
@@ -47,7 +48,13 @@ recalled. Start is never automatically retried.
 8. On explicit disconnect restore reporting mode 0 before closing GATT.
 
 Mode 0 is Wi-Fi reporting, 1 is Wi-Fi plus Bluetooth, and 2 is Bluetooth only.
-This client does not rewrite Wi-Fi profiles, MQTT endpoints or firmware.
+The monitoring/cooking client does not rewrite Wi-Fi profiles, server
+addresses or firmware. The separate [recovery controller](RECOVERY.md) can
+restore a server address after an explicit review of the exact known fault.
+It bypasses the reporting handshake, reads the device's own broker from
+`8a7f1168-48af-4efb-83b5-e679f932ff02`, and verifies inactive network setup
+before writing. Its complete hostname write is not a fragmented recipe
+transfer. Both paths use the same per-device connection lock.
 
 Direct status was observed without an account token on an already provisioned,
 Wi-Fi-connected unit. Accountless initial provisioning and fully offline

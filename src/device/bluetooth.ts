@@ -27,13 +27,17 @@ export class BrowserGatt implements GattWire {
   get name() {
     return this.device.name || 'Joule Turbo';
   }
-  static async choose(): Promise<BrowserGatt> {
+  static async choose({ recovery = false } = {}): Promise<BrowserGatt> {
     const problem = bluetoothSupport();
     if (problem) throw new Error(problem);
     // requestDevice must be invoked directly from the user's click.
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ namePrefix: 'BSV600' }, { services: [UUID.advertisement] }],
-      optionalServices: [UUID.service, UUID.infoService],
+      optionalServices: [
+        UUID.service,
+        UUID.infoService,
+        ...(recovery ? [UUID.networkService] : []),
+      ],
     });
     return new BrowserGatt(device);
   }

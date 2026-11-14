@@ -12,6 +12,7 @@ import {
   UUID,
 } from './protocol.ts';
 import type { GattWire } from './wire.ts';
+import { claimDeviceLock } from './lock.ts';
 
 const INITIAL: ConnectionSnapshot = {
   phase: 'disconnected',
@@ -95,6 +96,7 @@ export class JouleClient {
   private listeners = new Set<() => void>();
   private statusListeners = new Set<(status: JouleStatus) => void>();
   private wire: GattWire | null = null;
+  private ownsTransport = false;
   private queue: WriteQueue | null = null;
   private poll: ReturnType<typeof setInterval> | null = null;
   private proximityTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -148,36 +150,29 @@ export class JouleClient {
     this.wire = wire;
     this.stopWanted = false;
     this.update({ ...INITIAL, phase: 'connecting', kind: wire.kind });
-    wire.onDisconnect(() => {
-      if (this.wire !== wire) return;
-      this.lost(
-        'Bluetooth disconnected. Reconnect to read the Joule before sending another Start.',
-      );
-    });
-    this.queue = new WriteQueue(() =>
-      this.lost('The connection failed. A command may not have arrived; check the Joule.'),
-    );
+    let opened = false;
     const checked = () => {
       if (this.epoch !== epoch || this.wire !== wire) throw new Error('Connection cancelled.');
     };
     try {
-      if (wire.kind === 'bluetooth' && typeof navigator !== 'undefined' && navigator.locks) {
-        await new Promise<void>((resolve, reject) => {
-          void navigator.locks
-            .request(`joule-kitchen-${wire.id}`, { ifAvailable: true }, async (lock) => {
-              if (!lock) {
-                reject(new Error('This Joule is open in another tab. Disconnect it there first.'));
-                return;
-              }
-              await new Promise<void>((release) => {
-                this.releaseDeviceLock = release;
-                resolve();
-              });
-            })
-            .catch(reject);
-        });
+      const release = await claimDeviceLock(wire);
+      if (this.epoch !== epoch || this.wire !== wire) {
+        release();
+        throw new Error('Connection cancelled.');
       }
+      this.releaseDeviceLock = release;
       checked();
+      this.ownsTransport = true;
+      opened = true;
+      wire.onDisconnect(() => {
+        if (this.wire !== wire) return;
+        this.lost(
+          'Bluetooth disconnected. Reconnect to read the Joule before sending another Start.',
+        );
+      });
+      this.queue = new WriteQueue(() =>
+        this.lost('The connection failed. A command may not have arrived; check the Joule.'),
+      );
       const opening = wire.connect();
       void opening.then(
         () => {
@@ -271,7 +266,7 @@ export class JouleClient {
       }, 5000);
     } catch (error) {
       if (this.wire === wire) this.lost(errorMessage(error));
-      else wire.disconnect();
+      else if (opened) wire.disconnect();
       throw error;
     }
   }
@@ -292,7 +287,9 @@ export class JouleClient {
     this.queue = null;
     const wire = this.wire;
     this.wire = null;
-    wire?.disconnect();
+    const owned = this.ownsTransport;
+    this.ownsTransport = false;
+    if (owned) wire?.disconnect();
     this.update({
       phase: error ? 'error' : 'disconnected',
       proximity: 0,
@@ -302,7 +299,7 @@ export class JouleClient {
     });
   }
   async disconnect() {
-    if (!this.wire) {
+    if (!this.wire || !this.ownsTransport) {
       this.lost(null);
       return;
     }

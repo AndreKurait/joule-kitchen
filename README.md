@@ -8,7 +8,7 @@ bath, and keep temperature recordings in your browser. No account, application
 server, telemetry service, or cloud database is required for Bluetooth.
 
 **[Open Joule Kitchen](https://andrekurait.github.io/joule-kitchen/)** ·
-[Protocol notes](docs/PROTOCOL.md) · [Testing](docs/TESTING.md)
+[Connection recovery](docs/RECOVERY.md) · [Protocol notes](docs/PROTOCOL.md) · [Testing](docs/TESTING.md)
 
 > Early experimental release. Bluetooth monitoring and manual timed programs
 > are separate from Breville's native Turbo recipe system. See the tested scope
@@ -24,6 +24,10 @@ server, telemetry service, or cloud database is required for Bluetooth.
   interactive temperature graph, and visible gaps when readings stop.
 - IndexedDB recordings that survive reload, complete CSV export, and deletion.
   Simulated recordings are labelled and kept in separate sessions.
+- A **Recovery** section for the verified malformed server-address fault.
+  It checks settings over Bluetooth first, offers a reviewed repair only for
+  the exact supported fault, and reads the complete hostname back afterward.
+  See the [recovery guide and hardware evidence](docs/RECOVERY.md).
 - An experimental **manual timed bath** using the appliance's timer and an
   explicit heater-off instruction. Start requires a fresh idle state, physical
   button confirmation, and an on-screen review. Stop interrupts queued uploads;
@@ -40,6 +44,7 @@ server, telemetry service, or cloud database is required for Bluetooth.
 | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | Real BSV600 direct BLE status and temperature             | Verified using comm firmware 1.9.23 / task-engine 2.5.2                                                  |
 | Native browser pairing and recording                      | Implemented; release validation is recorded in [TESTING.md](docs/TESTING.md)                             |
+| Server-address recovery                                   | Method verified on hardware; browser repair is experimental and tested with simulated devices            |
 | Manual timed cook and Stop                                | Protocol implemented and tested against the mock; real-device status is in [TESTING.md](docs/TESTING.md) |
 | Record an existing Turbo cook                             | Uses reported native mode and measured bath readings                                                     |
 | Compile/start a native Turbo food recipe entirely offline | Not implemented; food/geometry coefficients and recipe compilation need separate validation              |
@@ -88,6 +93,20 @@ identifier.
 The account history responses inspected contained cook metadata and setpoints,
 not a historical measured temperature series. This app therefore records
 incoming readings itself. That is not a claim about every internal Breville API.
+
+### Stuck on “Securing Connection”
+
+Open **Recovery → Open recovery → Check my Joule**. The first check makes no
+changes. For the verified BSV600 / communication firmware 1.9.23 fault, the
+tool can restore the exact server hostname read from that same appliance.
+It preserves Wi-Fi credentials and firmware, then guides a restart and a
+read-only recheck. Breville+ must confirm cloud connectivity separately.
+
+The section also explains how the investigated Joule was recovered without a
+firmware flash. It is not a general unbricking tool. Try **Preview with a
+simulated fault** to explore the flow, including a lost connection during a
+write. See [RECOVERY.md](docs/RECOVERY.md) for eligibility, limitations and
+verification evidence.
 
 ## Run locally
 

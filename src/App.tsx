@@ -7,6 +7,7 @@ import type { GattWire } from './device/wire.ts';
 import { HistoryStore, exportCsv } from './history/store.ts';
 import { Recorder } from './history/recorder.ts';
 import { TemperatureGraph } from './history/Graph.tsx';
+import { RecoverySection } from './recovery/Recovery.tsx';
 import type { Recording, Sample, Unit } from './types.ts';
 import { errorMessage, formatTemperature } from './types.ts';
 
@@ -290,6 +291,7 @@ export default function App() {
             The kitchen
           </a>
           <a href="#history">Recordings</a>
+          <a href="#recovery">Recovery</a>
           <button className="nav-button" onClick={() => setAboutOpen(true)}>
             About
           </button>
@@ -447,7 +449,12 @@ export default function App() {
               )}
               <div className="connection-footer">
                 <span>01</span>
-                <span>Keep this page open to record.</span>
+                <span>
+                  Keep this page open to record.
+                  <a className="recovery-shortcut" href="#recovery">
+                    Stuck connecting? Try recovery ↗
+                  </a>
+                </span>
               </div>
             </section>
 
@@ -743,6 +750,8 @@ export default function App() {
             </section>
           </aside>
         </div>
+
+        <RecoverySection connectionBusy={connected || connecting} support={support} />
 
         {simulation && connected && (
           <details className="mock-controls">

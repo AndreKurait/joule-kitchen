@@ -7,12 +7,16 @@ export const UUID = Object.freeze({
   service: `${prefix}ff00`,
   serial: `${prefix}ff01`,
   proximity: `${prefix}ff05`,
+  serverAddress: `${prefix}ff07`,
   message: `${prefix}ff08`,
   request: `${prefix}ff09`,
   incoming: `${prefix}ff0a`,
   outgoing: `${prefix}ff0b`,
   infoService: '8a7f1168-48af-4efb-83b5-e679f932ff00',
+  broker: '8a7f1168-48af-4efb-83b5-e679f932ff02',
   platform: '8a7f1168-48af-4efb-83b5-e679f932ff04',
+  networkService: 'a9d7166a-d72e-40a9-a002-48044cc30100',
+  networkControl: 'a9d7166a-d72e-40a9-a002-48044cc30101',
 });
 
 export const Message = Object.freeze({

@@ -2,10 +2,10 @@
 
 CI never pairs with or controls physical hardware.
 
-The release passed **29 unit/protocol/storage checks** and **22
+The recovery release passed **65 unit/protocol/storage checks** and **32
 Playwright UI checks** (desktop and mobile Chromium) in Docker on macOS/arm64.
-The same 22 UI checks also passed against the direct Node mock in Chrome on
-macOS, including automatic server startup.
+The earlier Bluetooth release's 22 UI checks also passed against the direct
+Node mock in Chrome on macOS, including automatic server startup.
 GitHub Actions is configured to repeat the same suite on Linux before deploying Pages.
 The Pages workflow starts the mock directly on its container runner. The
 separate Docker workflow builds the images, runs the same UI tests across
@@ -60,6 +60,37 @@ Docker. The mock makes no appliance or cloud requests. Its HTTP server also
 denies Bluetooth through Permissions Policy. Tests use ordinary browser
 security settings.
 
+## Recovery checks
+
+The recovery controller is exercised with a persistent in-memory GATT
+peripheral and a synthetic implementation of the browser's native GATT API.
+The tests cover:
+
+- Read-only diagnosis and automatic Bluetooth release.
+- Exact identity, platform, firmware, hostname format, malformed address and
+  inactive network-setup guards.
+- Correct addresses, unknown settings and unsupported firmware receiving no
+  writes.
+- Fresh preflight reads rejecting settings that changed after review.
+- One complete acknowledged write of the selected device's own hostname,
+  followed by exact readback, without recipe fragments.
+- A dropped connection, lost acknowledgement, mismatched readback and hanging
+  write producing an unconfirmed result without automatic retries or rollback.
+- A fresh, read-only recheck after an uncertain result.
+- Cancellation before a write and shared ownership with normal monitoring.
+- Diagnostic exports excluding device identifiers and never claiming cloud
+  verification.
+
+Desktop and mobile browser tests exercise the simulated repair review,
+confirmation, readback, recheck and diagnostic download. They also cover
+healthy/unrecognized/unsupported outcomes, connection loss and opening the
+recovery section while monitoring is already connected.
+
+The recovery demo runs inside the browser, including in Docker UI tests, and
+never connects to a physical Bluetooth adapter or cloud service. It persists
+settings across simulated reconnects; it does not simulate Breville login,
+Wi-Fi provisioning or actual certificate rotation.
+
 ## Physical validation scope
 
 Direct native BLE status, measured temperature, heartbeat acknowledgement and
@@ -81,6 +112,15 @@ permissions across browser restarts depends on the browser.
 Manual cooking validation on the real appliance remains a separate supervised
 check. Successful mock tests do not establish real heater operation or offline
 Turbo cooking.
+
+The **server-address repair method** was verified using a native Bluetooth
+tool before the browser recovery port. The [recovery record](RECOVERY.md)
+describes fresh Breville status, physically observed pump start/stop, home
+Wi-Fi reconnection and the correct address surviving a power cycle.
+The new browser repair flow has been validated with simulated peripherals;
+no malformed setting was reintroduced into the working appliance to exercise
+the new browser write. A successful simulated repair is not a new hardware
+validation or proof of cloud connectivity.
 
 A physical test must use an attended appliance in water between its MIN/MAX
 marks, a prepared brief low-temperature program, independent Stop requests and
