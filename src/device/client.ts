@@ -446,6 +446,8 @@ export class JouleClient {
     if (this.pendingStartUuid)
       return 'The previous Start is not confirmed. Send Stop before trying another cook.';
     if (command) return 'A command is still pending.';
+    if (this.snapshot.error) return 'Waiting for a valid Joule status update.';
+    if (status.temperatureC === null) return 'Waiting for a valid bath temperature.';
     if (status.state !== 'idle') return 'Stop the current cook before starting another.';
     if (status.errors.length) return 'Resolve the Joule’s reported error before cooking.';
     if (proximity !== 2) return 'Enable cooking and confirm with the Joule’s top button.';

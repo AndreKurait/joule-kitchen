@@ -184,3 +184,14 @@ test('mock service rejects cross-origin WebSocket access', async ({ page }) => {
   });
   expect(result.status()).toBe(403);
 });
+
+test('a missing sensor blocks Start while leaving Stop available', async ({ page }) => {
+  await pairMock(page);
+  await enableCooking(page);
+  await page.getByRole('button', { name: 'Simulate missing sensor' }).click();
+  await expect(page.getByTestId('bath-temperature')).toHaveText('—');
+  await expect(page.getByRole('button', { name: 'Review manual cook' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Stop Joule', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Resume readings' }).click();
+  await expect(page.getByRole('button', { name: 'Review manual cook' })).toBeEnabled();
+});

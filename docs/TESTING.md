@@ -2,7 +2,7 @@
 
 CI never pairs with or controls physical hardware.
 
-The initial release passed **27 unit/protocol/storage checks** and **20
+The release passed **29 unit/protocol/storage checks** and **22
 Playwright UI checks** (desktop and mobile Chromium) in Docker on macOS/arm64.
 GitHub Actions repeats the same suite on Linux before deploying Pages.
 
@@ -28,15 +28,19 @@ separate mock container, including:
 - History surviving page reload.
 - Disconnect, stale data, reconnect without command replay.
 - Truncated frames and recovery on the next valid frame.
+- Missing temperature blocks Start while Stop remains available.
 - Same-origin access to the local mock service.
 
 Each WebSocket has a separate fake device. The mock processes serializable
 GATT reads, writes and notification subscriptions, using independent program
 validation rather than returning whatever status the UI expects.
 
-The container has no radio device, host networking, vendor credentials or
-outbound runtime network. The mock HTTP server also denies Bluetooth through
-Permissions Policy. Tests use ordinary browser security settings.
+The container has no radio device, host networking or vendor credentials. It
+uses a project bridge network and publishes its UI on loopback only. CI checks
+that the host can reach this published address, in addition to the tests inside
+Docker. The mock makes no appliance or cloud requests. Its HTTP server also
+denies Bluetooth through Permissions Policy. Tests use ordinary browser
+security settings.
 
 ## Physical validation scope
 

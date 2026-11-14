@@ -117,7 +117,9 @@ docker compose up --build
 Open **`http://127.0.0.1:4173/?mock=server`** and select **Try a simulated Joule**.
 Expand **Mock device controls** to press the simulated physical button, send
 Turbo status, truncate a frame, pause readings, slow an upload, or drop the
-connection. All simulation views and CSVs are labelled.
+connection. You can also simulate a missing temperature sensor to check that
+Start stays disabled while Stop remains available. All simulation views and
+CSVs are labelled.
 
 ```sh
 npm run test:docker
@@ -126,10 +128,11 @@ npm run test:docker:down
 
 The first command builds the static app, starts the mock, and runs Playwright
 desktop/mobile UI tests in a second container. It exits with the tests' status.
-The mock uses a private Docker network and publishes **127.0.0.1 only**. It has
-no Bluetooth adapter, cloud credentials, or access to a real Joule. Each
-WebSocket gets an independent simulated device. The test image installs only
-Chromium, with its revision pinned by `package-lock.json`.
+The mock uses a project Docker bridge network and publishes **127.0.0.1 only**.
+It has no Bluetooth adapter or cloud credentials and makes no requests to a
+real Joule or Breville. Each WebSocket gets an independent simulated device.
+The test image installs only Chromium, with its revision pinned by
+`package-lock.json`. CI also checks the mock's published localhost address.
 
 Without Docker:
 

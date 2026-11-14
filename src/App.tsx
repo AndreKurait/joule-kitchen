@@ -786,6 +786,9 @@ export default function App() {
               <button className="button secondary" onClick={() => void mockAction('malformed')}>
                 Send truncated frame
               </button>
+              <button className="button secondary" onClick={() => void mockAction('sensor-fault')}>
+                Simulate missing sensor
+              </button>
               <button className="button secondary" onClick={() => void mockAction('silence')}>
                 Pause readings
               </button>

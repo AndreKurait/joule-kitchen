@@ -64,6 +64,29 @@ describe('command lifecycle against independent simulated appliance', () => {
     await wire.action('button');
     expect(client.canStart(client.getSnapshot().status!.at + 16000)).toContain('fresh');
   });
+  it('rejects Start after a malformed frame until a complete valid snapshot arrives', async () => {
+    const { client, wire } = await connected();
+    await client.requestControl();
+    await wire.action('button');
+    await wire.action('malformed');
+    expect(client.canStart()).toContain('valid Joule status');
+    await expect(client.start({ temperatureC: 30, durationSeconds: 10 })).rejects.toThrow();
+    await wire.action('resume');
+    expect(client.canStart()).toBeNull();
+  });
+  it('rejects Start without a measured temperature and still allows Stop', async () => {
+    const { client, wire } = await connected();
+    await client.requestControl();
+    await wire.action('button');
+    await wire.action('sensor-fault');
+    expect(client.getSnapshot().status?.temperatureC).toBeNull();
+    expect(client.canStart()).toContain('valid bath temperature');
+    await expect(client.start({ temperatureC: 30, durationSeconds: 10 })).rejects.toThrow();
+    await client.stop();
+    expect(client.getSnapshot().status?.state).toBe('idle');
+    await wire.action('resume');
+    expect(client.canStart()).toBeNull();
+  });
   it('a GATT commit acknowledgement without a matching cook shadow cannot enable a second Start', async () => {
     class AcknowledgedOnlyGatt extends DemoGatt {
       override async write(service: string, characteristic: string, bytes: Uint8Array) {

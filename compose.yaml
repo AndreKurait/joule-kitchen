@@ -17,4 +17,4 @@ services:
     networks: [simulation]
 networks:
   simulation:
-    internal: true
+    driver: bridge

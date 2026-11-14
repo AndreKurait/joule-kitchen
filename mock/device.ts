@@ -2,7 +2,15 @@ import { decodeRecipe } from './recipe.ts';
 import { decoder, encode, encoder, Message, UUID } from '../src/device/protocol.ts';
 
 export type MockAction =
-  'button' | 'disconnect' | 'malformed' | 'silence' | 'resume' | 'turbo' | 'idle' | 'slow-upload';
+  | 'button'
+  | 'disconnect'
+  | 'malformed'
+  | 'silence'
+  | 'resume'
+  | 'turbo'
+  | 'idle'
+  | 'slow-upload'
+  | 'sensor-fault';
 export const MOCK_SERIAL = 'SIMULATED000001';
 export const MOCK_NAME = 'Joule • simulated';
 
@@ -20,6 +28,7 @@ export class MockDevice {
   private runningUntil: number | null = null;
   private target: number | null = null;
   private temperature = 22;
+  private sensorMissing = false;
   private recipeUuid: string | null = null;
   private nativeMode: number | null = null;
   private silenced = false;
@@ -173,7 +182,7 @@ export class MockDevice {
           heaters: [
             {
               id: 0,
-              cur_temp: Math.round(this.temperature * 10) / 10,
+              cur_temp: this.sensorMissing ? null : Math.round(this.temperature * 10) / 10,
               temp_sp: this.target,
               state: this.target === null ? null : 1,
             },
@@ -218,6 +227,10 @@ export class MockDevice {
     else if (action === 'silence') this.silenced = true;
     else if (action === 'resume') {
       this.silenced = false;
+      this.sensorMissing = false;
+      this.shadow();
+    } else if (action === 'sensor-fault') {
+      this.sensorMissing = true;
       this.shadow();
     } else if (action === 'slow-upload') this.slowUpload = true;
     else if (action === 'idle') this.stop();
